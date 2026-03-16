@@ -216,6 +216,25 @@ Debug output directories:
 - `examples/roi_test/`: packaged verification assets, including frames, debug output, stdin debug output, CSV files, and a sample MP4
 - `.gitignore`: local/build artifact exclusions
 
+## License
+
+This project is licensed under the MIT License. See [`LICENSE`](LICENSE).
+
+## Contributing
+
+Contributions should follow the repository conventions documented in [`AGENTS.md`](AGENTS.md).
+
+Before opening changes:
+
+- update [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) when plans or implementation details change
+- run the documented verification steps, at minimum `python -m py_compile` and `python -m waldo --help`
+- keep release-facing docs such as [`README.md`](README.md) and [`INSTALL`](INSTALL) aligned with behavior changes
+
+## Acknowledgements
+
+- OpenAI Codex for coding-agent workflow support during development
+- GPT-5.4 for implementation and documentation assistance
+
 ## Notes
 
 - In this environment, `pip install .` can still fail after a successful PEP 517 wheel build because pip's own wheel-cache finalization hits `EXDEV`; the supported local workaround is `python -m build --no-isolation` followed by `pip install --no-deps dist/*.whl`.
