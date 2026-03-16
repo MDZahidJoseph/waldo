@@ -1,0 +1,9 @@
+include README.md
+include INSTALL
+include pyproject.toml
+include setup.py
+include MANIFEST.in
+include pep517_backend.py
+include waldo.py
+include scripts/install_local_pep517.sh
+recursive-include waldo *.py

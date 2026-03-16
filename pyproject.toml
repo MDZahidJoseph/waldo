@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=82", "wheel"]
+build-backend = "pep517_backend"
+backend-path = ["."]
+
+[project]
+name = "waldo"
+version = "1.0.0"
+description = "Track a moving region of interest across frames or video."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy",
+  "opencv-python",
+]
+
+[project.scripts]
+waldo = "waldo.cli:run"
+
+[tool.setuptools.packages.find]
+include = ["waldo*"]
