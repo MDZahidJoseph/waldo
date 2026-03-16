@@ -46,6 +46,7 @@ Implement a Python CLI tool that tracks a region of interest across either a fra
 - [ ] Preserve shebang placement and exclude binary assets plus machine-readable CSV artifacts from header insertion.
 - [x] Add `License`, `Contributing`, and `Acknowledgements` sections to `README.md`.
 - [x] Refresh `AGENTS.md` so it reflects the current project functionality and workflows.
+- [x] Add coding style guidance and the Ruff reference to `README.md`.
 
 ## Implementation Changes
 

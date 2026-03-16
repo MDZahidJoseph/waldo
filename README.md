@@ -230,6 +230,12 @@ Before opening changes:
 - run the documented verification steps, at minimum `python -m py_compile` and `python -m waldo --help`
 - keep release-facing docs such as [`README.md`](README.md) and [`INSTALL`](INSTALL) aligned with behavior changes
 
+## Coding Style
+
+- Use Python 3.10+ with 4-space indentation and `snake_case` naming for functions, variables, and modules.
+- Keep the existing OpenCV-oriented structure and prefer small, focused functions over broad rewrites.
+- Format Python changes with [Ruff](https://github.com/astral-sh/ruff) so the codebase stays consistent with the current style.
+
 ## Acknowledgements
 
 - OpenAI Codex for coding-agent workflow support during development
