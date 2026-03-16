@@ -204,18 +204,34 @@ Debug output directories:
 - Omit `--debug-dir` or pass `--no-debug-images` to skip annotated image output entirely.
 - Use `--debug-every N` to only save every Nth debug frame.
 
-## Project Layout
+## Project Structure
 
-- `waldo/`: packaged application code
-- `waldo.py`: wrapper entrypoint
-- `pyproject.toml`: primary PEP 517 packaging metadata
-- `pep517_backend.py`: local PEP 517 backend shim for the filesystem rename workaround
-- `setup.py`: compatibility shim for older tooling
-- `INSTALL`: installation and release checklist
-- `MANIFEST.in`: explicit sdist allowlist
-- `examples/roi_test/`: packaged verification assets, including frames, debug output, stdin debug output, CSV files, and a sample MP4
-- `release_notes/`: versioned release notes for tagged releases
-- `.gitignore`: local/build artifact exclusions
+```text
+waldo/
+├── AGENTS.md                    # contributor guide and repository workflow notes
+├── IMPLEMENTATION_PLAN.md       # shared implementation plan and checklist
+├── INSTALL                      # installation and release checklist
+├── examples/                    # packaged verification assets
+├── LICENSE                      # project MIT license
+├── MANIFEST.in                  # explicit sdist allowlist
+├── pep517_backend.py            # local PEP 517 backend shim for the filesystem rename workaround
+├── project_structure            # local project structure reference file
+├── pyproject.toml               # primary PEP 517 packaging metadata
+├── README.md                    # user-facing project overview and usage guide
+├── release_notes/
+│   ├── RELEASE_NOTES_v1.0.0.md  # versioned release notes for v1.0.0
+│   └── RELEASE_NOTES_v1.1.0.md  # versioned release notes for v1.1.0
+├── requirements-dev.txt         # development and packaging tool dependencies
+├── requirements.txt             # runtime dependencies
+├── scripts/
+│   └── install_local_pep517.sh* # local helper for the documented wheel-build install flow
+├── setup.py                     # compatibility shim for older tooling
+├── waldo/
+│   ├── cli.py                   # packaged CLI and tracking implementation
+│   ├── __init__.py              # package metadata, including version
+│   └── __main__.py              # python -m waldo entrypoint
+└── waldo.py                     # wrapper entrypoint
+```
 
 ## License
 

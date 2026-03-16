@@ -51,6 +51,8 @@ Implement a Python CLI tool that tracks a region of interest across either a fra
 - [x] Create the release commit and annotated tag `v1.1.0`.
 - [x] Generate Markdown release notes for `v1.0.0` and `v1.1.0`.
 - [x] Move release notes into `release_notes/` and add a README directory reference.
+- [x] Rewrite the README project layout section as a directory tree with inline descriptions.
+- [x] Rename the README section heading from `Project Layout` to `Project Structure`.
 
 ## Implementation Changes
 
