@@ -214,6 +214,7 @@ Debug output directories:
 - `INSTALL`: installation and release checklist
 - `MANIFEST.in`: explicit sdist allowlist
 - `examples/roi_test/`: packaged verification assets, including frames, debug output, stdin debug output, CSV files, and a sample MP4
+- `release_notes/`: versioned release notes for tagged releases
 - `.gitignore`: local/build artifact exclusions
 
 ## License

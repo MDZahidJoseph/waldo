@@ -49,6 +49,8 @@ Implement a Python CLI tool that tracks a region of interest across either a fra
 - [x] Add coding style guidance and the Ruff reference to `README.md`.
 - [x] Bump the project version to `1.1.0` across metadata and documentation.
 - [x] Create the release commit and annotated tag `v1.1.0`.
+- [x] Generate Markdown release notes for `v1.0.0` and `v1.1.0`.
+- [x] Move release notes into `release_notes/` and add a README directory reference.
 
 ## Implementation Changes
 
