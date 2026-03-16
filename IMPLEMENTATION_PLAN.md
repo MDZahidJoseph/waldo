@@ -47,6 +47,8 @@ Implement a Python CLI tool that tracks a region of interest across either a fra
 - [x] Add `License`, `Contributing`, and `Acknowledgements` sections to `README.md`.
 - [x] Refresh `AGENTS.md` so it reflects the current project functionality and workflows.
 - [x] Add coding style guidance and the Ruff reference to `README.md`.
+- [x] Bump the project version to `1.1.0` across metadata and documentation.
+- [x] Create the release commit and annotated tag `v1.1.0`.
 
 ## Implementation Changes
 
@@ -96,7 +98,7 @@ Implement a Python CLI tool that tracks a region of interest across either a fra
   `initialize(frame, template | bbox) -> detection`
   `update(frame) -> detection`
 - Detection objects should carry bounding box, confidence, and status, and config should be grouped in a dedicated dataclass for tuning.
-- Package metadata should expose version `1.0.0`, and the `waldo.py` wrapper should remain aligned with the packaged CLI.
+- Package metadata should expose version `1.1.0`, and the `waldo.py` wrapper should remain aligned with the packaged CLI.
 - Default generated artifact names should use the `waldo` project name where they represent project outputs rather than tracker-domain concepts.
 - The PEP 517 backend should remain setuptools-based, but may be wrapped locally to replace failing cross-device renames with copy-and-replace behavior during wheel/sdist finalization.
 - `setup.py` should be compatibility-only: modern setuptools should defer to `pyproject.toml`, while older setuptools should fall back to explicit metadata and package discovery.
@@ -144,7 +146,7 @@ Implement a Python CLI tool that tracks a region of interest across either a fra
 - Automatic recovery is preferred over aborting on tracking loss.
 - Video decoding relies on `ffmpeg`/`ffprobe`; frame-directory mode relies on image files readable by Pillow.
 - OpenCV is the intended runtime dependency, and debug image generation should favor throughput over maximum PNG compression.
-- Version `1.0.0` is the first packaged release baseline.
+- Version `1.1.0` is the current packaged release baseline.
 - Some environments may report same-device paths to user-space while still causing backend artifact renames to fail with `EXDEV`; the workaround should treat that as an installation-environment quirk, not a package metadata error.
 - `pip install .` may still fail in this environment after a successful wheel build if pip's own ephemeral wheel cache hits the same rename problem; direct installation of the built wheel is the expected fallback.
 - Backward compatibility with older setup.py-based tooling is desirable, but `pyproject.toml` remains the source of truth for modern packaging metadata.

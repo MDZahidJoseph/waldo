@@ -29,7 +29,7 @@ Core application code lives in [`waldo/`](/home/weerdmonk/Projects/waldo/waldo),
 
 ## Build, Test, and Development Commands
 
-Install runtime dependencies with `.venv/bin/pip install -r requirements.txt`. Install build tooling with `.venv/bin/pip install -r requirements-dev.txt`. Run the CLI locally with `.venv/bin/python -m waldo --help` or `.venv/bin/waldo --version`. Build release artifacts with `TMPDIR=/home/weerdmonk/Projects/waldo/tmp .venv/bin/python -m build --no-isolation`. For this environment, install the built wheel with `.venv/bin/pip install --no-deps dist/waldo-1.0.0-py3-none-any.whl` or use `./scripts/install_local_pep517.sh`. For stdin verification, use ffmpeg pipelines documented in [`README.md`](/home/weerdmonk/Projects/waldo/README.md) and [`INSTALL`](/home/weerdmonk/Projects/waldo/INSTALL).
+Install runtime dependencies with `.venv/bin/pip install -r requirements.txt`. Install build tooling with `.venv/bin/pip install -r requirements-dev.txt`. Run the CLI locally with `.venv/bin/python -m waldo --help` or `.venv/bin/waldo --version`. Build release artifacts with `TMPDIR=/home/weerdmonk/Projects/waldo/tmp .venv/bin/python -m build --no-isolation`. For this environment, install the built wheel with `.venv/bin/pip install --no-deps dist/waldo-1.1.0-py3-none-any.whl` or use `./scripts/install_local_pep517.sh`. For stdin verification, use ffmpeg pipelines documented in [`README.md`](/home/weerdmonk/Projects/waldo/README.md) and [`INSTALL`](/home/weerdmonk/Projects/waldo/INSTALL).
 
 ## Coding Style & Naming Conventions
 

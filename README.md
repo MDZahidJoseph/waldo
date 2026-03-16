@@ -23,14 +23,14 @@ SOFTWARE.
 
 # Waldo
 
-Version: `1.0.0`
+Version: `1.1.0`
 
 `waldo` tracks a moving region of interest across either a folder of image frames, a video file, or piped frame data on `stdin`.
 It is packaged as a distributable Python module and includes `waldo.py` as a wrapper entrypoint.
 
 ## Current Status
 
-- The tracker core is implemented and usable as version `1.0.0`.
+- The tracker core is implemented and usable as version `1.1.0`.
 - Phase 2 stdin pipeline support is implemented for ffmpeg-style raw `bgr24` and `image2pipe` PNG/JPEG streams.
 - Packaging is PEP 517-first through `pyproject.toml`, with `setup.py` retained as a compatibility shim for older setuptools-based tooling.
 - The PEP 517 workflow uses `pep517_backend.py` as the local build backend shim so setuptools wheel/sdist finalization can fall back cleanly when this environment raises `EXDEV` on `rename`.
@@ -55,7 +55,7 @@ PEP 517 build/install in this environment:
 
 ```bash
 TMPDIR=/home/weerdmonk/Projects/waldo/tmp .venv/bin/python -m build --no-isolation
-.venv/bin/pip install --no-deps dist/waldo-1.0.0-py3-none-any.whl
+.venv/bin/pip install --no-deps dist/waldo-1.1.0-py3-none-any.whl
 ```
 
 This flow uses `pyproject.toml` together with `pep517_backend.py`. The backend shim is part of the source distribution and is required for the documented local workaround in environments where backend artifact finalization can hit `EXDEV`.
