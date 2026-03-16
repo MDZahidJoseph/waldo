@@ -11,6 +11,14 @@ Implement a Python CLI tool that tracks a region of interest across either a fra
 - [x] Add release-manifest and repository hygiene controls.
 - [x] Verify packaged execution, version reporting, and local install workflows.
 - [x] Add a contributor guide in `AGENTS.md` for repository conventions and workflows.
+- [x] Add phase-2 stdin pipeline input support for ffmpeg streaming.
+- [x] Support raw `bgr24` stdin frames with size from `--stdin-size` or `WALDO_STDIN_SIZE`.
+- [x] Support encoded `image2pipe` PNG/JPEG stdin streams.
+- [x] Document ffmpeg pipeline usage and validate stdin tracking paths.
+- [x] Create a reproducible sample video from `examples/roi_test/frames`.
+- [x] Generate corresponding debug frames under `examples/roi_test/stdin_debug`.
+- [x] Refresh README to document stdin pipeline support and packaged verification artifacts.
+- [x] Review INSTALL for any remaining stdin-pipeline documentation gaps.
 
 ## Implementation Changes
 
@@ -38,6 +46,18 @@ Implement a Python CLI tool that tracks a region of interest across either a fra
 - Document runtime requirements and example commands in `README.md`.
 - Add a dedicated `INSTALL` document that describes the preferred PEP 517 installation path and the `setup.py` compatibility fallback.
 - Add repository hygiene and release-boundary controls through `.gitignore` and an explicit `MANIFEST.in` allowlist so local artifacts stay out of git and out of release tarballs unless required.
+- Add a third input mode that auto-detects piped `stdin` when no explicit input source is set, so ffmpeg can stream frames directly into `waldo`.
+- Add stdin-specific options:
+  `--stdin-format auto|raw-bgr24|png|jpeg`
+  `--stdin-size WIDTHxHEIGHT`
+- Support ffmpeg `rawvideo` pipelines using `bgr24`, with frame size resolved in this order:
+  `--stdin-size`
+  `WALDO_STDIN_SIZE`
+  otherwise fail with a clear error.
+- Support ffmpeg `image2pipe` pipelines for concatenated PNG and JPEG frames, including auto-detection of PNG/JPEG signatures from the initial stdin buffer.
+- Keep all existing tracking, CSV, debug, and initialization options valid for stdin mode except `--frames-dir`.
+- Generate timestamp-based `frame_id` values for stdin-fed frames.
+- Add reproducible verification artifacts by packaging a small sample video built from the example frame set and the corresponding debug output produced by `waldo`.
 
 ## Public Interfaces
 
@@ -53,6 +73,7 @@ Implement a Python CLI tool that tracks a region of interest across either a fra
 - `setup.py` should be compatibility-only: modern setuptools should defer to `pyproject.toml`, while older setuptools should fall back to explicit metadata and package discovery.
 - Installation documentation should distinguish runtime dependencies from development/build tooling and make the supported local install path explicit.
 - Release maintenance should be driven by explicit package metadata and manifest policy rather than by whatever happens to be present in the git working tree.
+- CLI input handling should accept auto-detected piped stdin as an alternative to `--video` and `--frames-dir`, with `--stdin-format` and `--stdin-size` controlling stdin decoding when needed.
 
 ## Test Plan
 
@@ -66,6 +87,13 @@ Implement a Python CLI tool that tracks a region of interest across either a fra
 - Verify `--no-debug-images` suppresses debug output even when a debug directory is supplied.
 - Verify packaged execution via `python -m waldo`, installed console script `waldo`, and `--version`.
 - Verify default CLI outputs such as the CSV filename use the `waldo` project name.
+- Verify stdin auto-detection activates only when stdin is piped and no explicit input source is selected.
+- Verify raw `bgr24` stdin tracking with `--stdin-size`.
+- Verify raw `bgr24` stdin tracking with `WALDO_STDIN_SIZE` and no `--stdin-size`.
+- Verify missing raw stdin dimensions fail clearly.
+- Verify PNG and JPEG `image2pipe` stdin streams decode and track correctly.
+- Verify malformed or truncated stdin data fails clearly.
+- Verify stdin CSV output uses timestamp-based `frame_id` values.
 - Verify `python -m build` and `pip install .` succeed under PEP 517 in the current environment after applying the filesystem workaround.
 - Verify the fallback local install path succeeds: `python -m build --no-isolation` followed by `pip install --no-deps dist/*.whl`.
 - Verify `python setup.py --version` still works for older-tool compatibility without conflicting with modern pyproject-driven metadata.
@@ -91,3 +119,4 @@ Implement a Python CLI tool that tracks a region of interest across either a fra
 - `pip install .` may still fail in this environment after a successful wheel build if pip's own ephemeral wheel cache hits the same rename problem; direct installation of the built wheel is the expected fallback.
 - Backward compatibility with older setup.py-based tooling is desirable, but `pyproject.toml` remains the source of truth for modern packaging metadata.
 - The repository is intended to be maintained as a source tree with explicit release curation, not as a “ship everything in the repo” archive.
+- Stdin pipeline support is limited to raw `bgr24` and ffmpeg-style concatenated PNG/JPEG `image2pipe` streams for phase 2.

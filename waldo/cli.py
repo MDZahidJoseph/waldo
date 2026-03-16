@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 import sys
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from queue import Queue
 from threading import Thread
-from typing import Iterable, Iterator, Optional
+from typing import BinaryIO, Iterable, Iterator, Optional
 
 import cv2
 import numpy as np
@@ -16,6 +18,11 @@ from . import __version__
 
 
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff", ".webp"}
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+PNG_END_MARKER = b"IEND\xaeB`\x82"
+JPEG_SOI = b"\xff\xd8"
+JPEG_EOI = b"\xff\xd9"
+STDIN_FORMATS = ("auto", "raw-bgr24", "png", "jpeg")
 
 
 @dataclass
@@ -83,9 +90,20 @@ def parse_args() -> argparse.Namespace:
         description="Track a moving ROI across image frames or a video."
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
-    input_group = parser.add_mutually_exclusive_group(required=True)
+    input_group = parser.add_mutually_exclusive_group(required=False)
     input_group.add_argument("--frames-dir", type=Path, help="Directory of ordered frames.")
     input_group.add_argument("--video", type=Path, help="Video file to decode with OpenCV.")
+    parser.add_argument(
+        "--stdin-format",
+        choices=STDIN_FORMATS,
+        default="auto",
+        help="Format for piped stdin frames: auto, raw-bgr24, png, or jpeg.",
+    )
+    parser.add_argument(
+        "--stdin-size",
+        type=str,
+        help="Frame size for raw stdin streams as WIDTHxHEIGHT.",
+    )
 
     init_group = parser.add_mutually_exclusive_group(required=True)
     init_group.add_argument("--template", type=Path, help="ROI template image.")
@@ -150,6 +168,29 @@ def parse_bbox(raw: str) -> tuple[int, int, int, int]:
     return x, y, w, h
 
 
+def parse_frame_size(raw: str) -> tuple[int, int]:
+    normalized = raw.lower().strip().replace(" ", "")
+    if "x" not in normalized:
+        raise ValueError("stdin size must be WIDTHxHEIGHT")
+    width_raw, height_raw = normalized.split("x", 1)
+    width = int(width_raw)
+    height = int(height_raw)
+    if width <= 0 or height <= 0:
+        raise ValueError("stdin width and height must be positive")
+    return width, height
+
+
+def resolve_stdin_size(args: argparse.Namespace) -> tuple[int, int]:
+    if args.stdin_size:
+        return parse_frame_size(args.stdin_size)
+    env_size = os.environ.get("WALDO_STDIN_SIZE")
+    if env_size:
+        return parse_frame_size(env_size)
+    raise RuntimeError(
+        "Raw stdin input requires --stdin-size WIDTHxHEIGHT or WALDO_STDIN_SIZE=WIDTHxHEIGHT"
+    )
+
+
 def clamp_bbox(
     bbox: tuple[int, int, int, int], frame_w: int, frame_h: int
 ) -> tuple[int, int, int, int]:
@@ -180,6 +221,102 @@ def read_image(path: Path) -> np.ndarray:
     if image is None:
         raise RuntimeError(f"Could not read image: {path}")
     return image
+
+
+def timestamp_frame_id() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="microseconds").replace("+00:00", "Z")
+
+
+class BufferedStdinReader:
+    def __init__(self, stream: BinaryIO) -> None:
+        self.stream = stream
+        self.buffer = bytearray()
+        self.eof = False
+
+    def ensure(self, size: int) -> bool:
+        while len(self.buffer) < size and not self.eof:
+            chunk = self.stream.read(max(4096, size - len(self.buffer)))
+            if not chunk:
+                self.eof = True
+                break
+            self.buffer.extend(chunk)
+        return len(self.buffer) >= size
+
+    def read_exact(self, size: int) -> bytes:
+        if size == 0:
+            return b""
+        if not self.ensure(size):
+            if self.buffer:
+                raise RuntimeError("Truncated stdin frame data")
+            return b""
+        data = bytes(self.buffer[:size])
+        del self.buffer[:size]
+        return data
+
+    def read_more(self, size: int = 4096) -> bool:
+        if self.eof:
+            return False
+        chunk = self.stream.read(size)
+        if not chunk:
+            self.eof = True
+            return False
+        self.buffer.extend(chunk)
+        return True
+
+
+def sniff_stdin_format(reader: BufferedStdinReader, requested: str) -> str:
+    if requested != "auto":
+        return requested
+    reader.ensure(len(PNG_SIGNATURE))
+    if reader.buffer.startswith(PNG_SIGNATURE):
+        return "png"
+    if reader.buffer.startswith(JPEG_SOI):
+        return "jpeg"
+    return "raw-bgr24"
+
+
+def decode_image_bytes(payload: bytes) -> np.ndarray:
+    array = np.frombuffer(payload, dtype=np.uint8)
+    frame = cv2.imdecode(array, cv2.IMREAD_COLOR)
+    if frame is None:
+        raise RuntimeError("Could not decode stdin image frame")
+    return frame
+
+
+def pop_png_frame(reader: BufferedStdinReader) -> Optional[bytes]:
+    while True:
+        if not reader.ensure(len(PNG_SIGNATURE)):
+            if reader.buffer:
+                raise RuntimeError("Truncated PNG frame on stdin")
+            return None
+        if not reader.buffer.startswith(PNG_SIGNATURE):
+            raise RuntimeError("stdin does not contain a valid PNG image stream")
+        end = reader.buffer.find(PNG_END_MARKER, len(PNG_SIGNATURE))
+        if end != -1:
+            frame_end = end + len(PNG_END_MARKER)
+            payload = bytes(reader.buffer[:frame_end])
+            del reader.buffer[:frame_end]
+            return payload
+        if not reader.read_more():
+            raise RuntimeError("Truncated PNG frame on stdin")
+
+
+def pop_jpeg_frame(reader: BufferedStdinReader) -> Optional[bytes]:
+    while True:
+        if not reader.ensure(len(JPEG_SOI)):
+            if reader.buffer:
+                raise RuntimeError("Truncated JPEG frame on stdin")
+            return None
+        if not reader.buffer.startswith(JPEG_SOI):
+            raise RuntimeError("stdin does not contain a valid JPEG image stream")
+        end = reader.buffer.find(JPEG_EOI, len(JPEG_SOI))
+        if end != -1:
+            frame_end = end + len(JPEG_EOI)
+            payload = bytes(reader.buffer[:frame_end])
+            del reader.buffer[:frame_end]
+            return payload
+        if not reader.read_more():
+            raise RuntimeError("Truncated JPEG frame on stdin")
 
 
 def make_search_region(
@@ -430,6 +567,34 @@ def iter_frames_from_video(video_path: Path) -> Iterator[tuple[int, str, np.ndar
         capture.release()
 
 
+def iter_frames_from_raw_stdin(
+    reader: BufferedStdinReader, frame_size: tuple[int, int]
+) -> Iterator[tuple[int, str, np.ndarray]]:
+    width, height = frame_size
+    frame_bytes = width * height * 3
+    index = 0
+    while True:
+        payload = reader.read_exact(frame_bytes)
+        if not payload:
+            break
+        frame = np.frombuffer(payload, dtype=np.uint8).reshape((height, width, 3))
+        yield index, timestamp_frame_id(), frame.copy()
+        index += 1
+
+
+def iter_frames_from_encoded_stdin(
+    reader: BufferedStdinReader, image_format: str
+) -> Iterator[tuple[int, str, np.ndarray]]:
+    index = 0
+    pop_frame = pop_png_frame if image_format == "png" else pop_jpeg_frame
+    while True:
+        payload = pop_frame(reader)
+        if payload is None:
+            break
+        yield index, timestamp_frame_id(), decode_image_bytes(payload)
+        index += 1
+
+
 def draw_debug_frame(frame: np.ndarray, detection: Detection) -> np.ndarray:
     image = frame.copy()
     color = {
@@ -476,7 +641,15 @@ def build_config(args: argparse.Namespace) -> TrackerConfig:
 def frame_source(args: argparse.Namespace) -> Iterable[tuple[int, str, np.ndarray]]:
     if args.frames_dir is not None:
         return iter_frames_from_dir(args.frames_dir)
-    return iter_frames_from_video(args.video)
+    if args.video is not None:
+        return iter_frames_from_video(args.video)
+    if not sys.stdin.buffer.isatty():
+        reader = BufferedStdinReader(sys.stdin.buffer)
+        stdin_format = sniff_stdin_format(reader, args.stdin_format)
+        if stdin_format == "raw-bgr24":
+            return iter_frames_from_raw_stdin(reader, resolve_stdin_size(args))
+        return iter_frames_from_encoded_stdin(reader, stdin_format)
+    raise RuntimeError("No input source specified. Use --frames-dir, --video, or pipe frames to stdin.")
 
 
 def main() -> int:

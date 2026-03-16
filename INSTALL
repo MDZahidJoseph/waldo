@@ -34,6 +34,36 @@ Notes:
 - In this environment, `pip install .` may fail even after a successful wheel build because pip's wheel cache can hit an `EXDEV` rename error.
 - The supported local workaround is to build first, through `pep517_backend.py`, then install the generated wheel directly.
 
+FFmpeg stdin pipeline usage
+---------------------------
+
+If no explicit input source is given and stdin is piped, `waldo` reads frames from stdin.
+
+Raw `bgr24` example:
+
+    ffmpeg -i /path/to/video.mp4 -f rawvideo -pix_fmt bgr24 pipe:1 | \
+    .venv/bin/waldo --stdin-format raw-bgr24 --stdin-size 1366x680 \
+    --template /path/to/template.png --output-csv tracks.csv
+
+PNG `image2pipe` example:
+
+    ffmpeg -i /path/to/video.mp4 -f image2pipe -vcodec png pipe:1 | \
+    .venv/bin/waldo --stdin-format png \
+    --template /path/to/template.png --output-csv tracks.csv
+
+JPEG `image2pipe` example:
+
+    ffmpeg -i /path/to/video.mp4 -f image2pipe -vcodec mjpeg pipe:1 | \
+    .venv/bin/waldo --stdin-format jpeg \
+    --template /path/to/template.png --output-csv tracks.csv
+
+For raw stdin streams, frame size must be provided through either:
+
+- `--stdin-size WIDTHxHEIGHT`
+- `WALDO_STDIN_SIZE=WIDTHxHEIGHT`
+
+If `--stdin-format` is omitted, `waldo` defaults to `auto` and detects PNG/JPEG streams from the incoming bytes; otherwise it falls back to raw `bgr24`.
+
 Fallback: setup.py Compatibility
 --------------------------------
 
