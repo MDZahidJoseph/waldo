@@ -1,3 +1,26 @@
+<!--
+waldo - image region of interest tracker
+Copyright (C) 2026 notweerdmonk
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+
 # Waldo Implementation Plan
 
 ## Summary
@@ -19,6 +42,8 @@ Implement a Python CLI tool that tracks a region of interest across either a fra
 - [x] Generate corresponding debug frames under `examples/roi_test/stdin_debug`.
 - [x] Refresh README to document stdin pipeline support and packaged verification artifacts.
 - [x] Review INSTALL for any remaining stdin-pipeline documentation gaps.
+- [ ] Apply the MIT license header to all pertinent tracked text files.
+- [ ] Preserve shebang placement and exclude binary assets plus machine-readable CSV artifacts from header insertion.
 
 ## Implementation Changes
 
@@ -58,6 +83,7 @@ Implement a Python CLI tool that tracks a region of interest across either a fra
 - Keep all existing tracking, CSV, debug, and initialization options valid for stdin mode except `--frames-dir`.
 - Generate timestamp-based `frame_id` values for stdin-fed frames.
 - Add reproducible verification artifacts by packaging a small sample video built from the example frame set and the corresponding debug output produced by `waldo`.
+- Apply the repository MIT license header consistently across source files, scripts, configuration files, and human-readable documentation using syntax-appropriate comment styles.
 
 ## Public Interfaces
 
@@ -94,6 +120,7 @@ Implement a Python CLI tool that tracks a region of interest across either a fra
 - Verify PNG and JPEG `image2pipe` stdin streams decode and track correctly.
 - Verify malformed or truncated stdin data fails clearly.
 - Verify stdin CSV output uses timestamp-based `frame_id` values.
+- Verify the license header is present in all intended tracked text files, shebang lines remain first where required, and excluded binary/CSV artifacts remain untouched.
 - Verify `python -m build` and `pip install .` succeed under PEP 517 in the current environment after applying the filesystem workaround.
 - Verify the fallback local install path succeeds: `python -m build --no-isolation` followed by `pip install --no-deps dist/*.whl`.
 - Verify `python setup.py --version` still works for older-tool compatibility without conflicting with modern pyproject-driven metadata.
