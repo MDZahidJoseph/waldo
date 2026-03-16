@@ -69,7 +69,9 @@ class TrackerConfig:
 
 
 class DebugImageWriter:
-    def __init__(self, debug_dir: Path, png_compression: int = 1, queue_size: int = 32) -> None:
+    def __init__(
+        self, debug_dir: Path, png_compression: int = 1, queue_size: int = 32
+    ) -> None:
         self.debug_dir = debug_dir
         self.params = [cv2.IMWRITE_PNG_COMPRESSION, png_compression]
         self.queue: Queue[Optional[tuple[Path, np.ndarray]]] = Queue(maxsize=queue_size)
@@ -79,14 +81,18 @@ class DebugImageWriter:
 
     def submit(self, path: Path, image: np.ndarray) -> None:
         if self.error is not None:
-            raise RuntimeError(f"Debug image writer failed: {self.error}") from self.error
+            raise RuntimeError(
+                f"Debug image writer failed: {self.error}"
+            ) from self.error
         self.queue.put((path, image.copy()))
 
     def close(self) -> None:
         self.queue.put(None)
         self.worker.join()
         if self.error is not None:
-            raise RuntimeError(f"Debug image writer failed: {self.error}") from self.error
+            raise RuntimeError(
+                f"Debug image writer failed: {self.error}"
+            ) from self.error
 
     def _run(self) -> None:
         try:
@@ -107,13 +113,18 @@ class DebugImageWriter:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="waldo",
-        description="Track a moving ROI across image frames or a video."
+        prog="waldo", description="Track a moving ROI across image frames or a video."
     )
-    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {__version__}"
+    )
     input_group = parser.add_mutually_exclusive_group(required=False)
-    input_group.add_argument("--frames-dir", type=Path, help="Directory of ordered frames.")
-    input_group.add_argument("--video", type=Path, help="Video file to decode with OpenCV.")
+    input_group.add_argument(
+        "--frames-dir", type=Path, help="Directory of ordered frames."
+    )
+    input_group.add_argument(
+        "--video", type=Path, help="Video file to decode with OpenCV."
+    )
     parser.add_argument(
         "--stdin-format",
         choices=STDIN_FORMATS,
@@ -135,7 +146,9 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument("--output-csv", type=Path, default=Path("waldo_tracks.csv"))
-    parser.add_argument("--debug-dir", type=Path, help="Optional directory for annotated frames.")
+    parser.add_argument(
+        "--debug-dir", type=Path, help="Optional directory for annotated frames."
+    )
     parser.add_argument(
         "--debug-every",
         type=int,
@@ -148,7 +161,9 @@ def parse_args() -> argparse.Namespace:
         help="Disable debug image generation even if --debug-dir is provided.",
     )
     parser.add_argument("--start-frame", type=int, default=0)
-    parser.add_argument("--end-frame", type=int, help="Stop after this frame index, inclusive.")
+    parser.add_argument(
+        "--end-frame", type=int, help="Stop after this frame index, inclusive."
+    )
     parser.add_argument("--search-margin", type=float, default=1.5)
     parser.add_argument("--redetect-interval", type=int, default=15)
     parser.add_argument(
@@ -245,7 +260,11 @@ def read_image(path: Path) -> np.ndarray:
 
 
 def timestamp_frame_id() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="microseconds").replace("+00:00", "Z")
+    return (
+        datetime.now(timezone.utc)
+        .isoformat(timespec="microseconds")
+        .replace("+00:00", "Z")
+    )
 
 
 class BufferedStdinReader:
@@ -428,7 +447,9 @@ class HybridRoiTracker:
             and self.frame_counter % self.config.redetect_interval == 0
             and detection.confidence <= self.config.redetect_confidence
         )
-        should_redetect = detection.confidence < self.config.min_confidence or interval_due
+        should_redetect = (
+            detection.confidence < self.config.min_confidence or interval_due
+        )
 
         if should_redetect:
             recovered = self._detect(frame_gray, None, "redetected")
@@ -457,9 +478,9 @@ class HybridRoiTracker:
         crop = resize_image(crop, target_size).astype(np.float32)
         rate = self.config.template_refresh_rate
         self.recent_template = (1.0 - rate) * self.recent_template + rate * crop
-        self.recent_template_gray = to_gray(self.recent_template.astype(np.uint8)).astype(
-            np.float32
-        )
+        self.recent_template_gray = to_gray(
+            self.recent_template.astype(np.uint8)
+        ).astype(np.float32)
         self._recent_scaled_gray = self._build_scaled_template_cache(
             self.recent_template_gray.astype(np.uint8)
         )
@@ -471,7 +492,12 @@ class HybridRoiTracker:
         status: str,
     ) -> Detection:
         if search_region is None:
-            region_x, region_y, region_w, region_h = 0, 0, frame_gray.shape[1], frame_gray.shape[0]
+            region_x, region_y, region_w, region_h = (
+                0,
+                0,
+                frame_gray.shape[1],
+                frame_gray.shape[0],
+            )
         else:
             region_x, region_y, region_w, region_h = search_region
         region = crop_frame(frame_gray, (region_x, region_y, region_w, region_h))
@@ -496,7 +522,9 @@ class HybridRoiTracker:
             ):
                 continue
 
-            weighted_score, location = self._match_region(region, scaled_original, scale)
+            weighted_score, location = self._match_region(
+                region, scaled_original, scale
+            )
             if weighted_score > best_confidence:
                 best_confidence = weighted_score
                 best_scale = scale
@@ -509,21 +537,37 @@ class HybridRoiTracker:
 
         x, y, w, h = clamp_bbox(best_bbox, frame_gray.shape[1], frame_gray.shape[0])
         return Detection(
-            x=x, y=y, w=w, h=h, confidence=best_confidence, status=status, scale=best_scale
+            x=x,
+            y=y,
+            w=w,
+            h=h,
+            confidence=best_confidence,
+            status=status,
+            scale=best_scale,
         )
 
     def _match_region(
         self, region: np.ndarray, scaled_original: np.ndarray, scale: float
     ) -> tuple[float, tuple[int, int]]:
-        original_score, original_location = self._template_score(region, scaled_original)
+        original_score, original_location = self._template_score(
+            region, scaled_original
+        )
         total_weight = 1.0 - self.config.recent_template_weight
         blended_score = original_score * total_weight
         best_location = original_location
 
-        if self.recent_template_gray is not None and self.config.recent_template_weight > 0.0:
+        if (
+            self.recent_template_gray is not None
+            and self.config.recent_template_weight > 0.0
+        ):
             scaled_recent = self._recent_scaled_gray.get(scale)
-            if scaled_recent is not None and scaled_recent.shape[:2] == scaled_original.shape[:2]:
-                recent_score, recent_location = self._template_score(region, scaled_recent)
+            if (
+                scaled_recent is not None
+                and scaled_recent.shape[:2] == scaled_original.shape[:2]
+            ):
+                recent_score, recent_location = self._template_score(
+                    region, scaled_recent
+                )
                 blended_score += recent_score * self.config.recent_template_weight
                 total_weight += self.config.recent_template_weight
                 if recent_score > original_score:
@@ -532,12 +576,16 @@ class HybridRoiTracker:
         return blended_score / total_weight, best_location
 
     @staticmethod
-    def _template_score(region: np.ndarray, template: np.ndarray) -> tuple[float, tuple[int, int]]:
+    def _template_score(
+        region: np.ndarray, template: np.ndarray
+    ) -> tuple[float, tuple[int, int]]:
         result = cv2.matchTemplate(region, template, cv2.TM_CCOEFF_NORMED)
         _, max_value, _, max_location = cv2.minMaxLoc(result)
         return float(max_value), (int(max_location[0]), int(max_location[1]))
 
-    def _build_scaled_template_cache(self, template_gray: np.ndarray) -> dict[float, np.ndarray]:
+    def _build_scaled_template_cache(
+        self, template_gray: np.ndarray
+    ) -> dict[float, np.ndarray]:
         cache: dict[float, np.ndarray] = {}
         for scale in self.config.scales:
             width = max(4, int(round(template_gray.shape[1] * scale)))
@@ -645,7 +693,9 @@ def draw_debug_frame(frame: np.ndarray, detection: Detection) -> np.ndarray:
 
 
 def build_config(args: argparse.Namespace) -> TrackerConfig:
-    scales = tuple(float(value.strip()) for value in args.scales.split(",") if value.strip())
+    scales = tuple(
+        float(value.strip()) for value in args.scales.split(",") if value.strip()
+    )
     if not scales:
         raise ValueError("At least one scale is required")
     return TrackerConfig(
@@ -670,7 +720,9 @@ def frame_source(args: argparse.Namespace) -> Iterable[tuple[int, str, np.ndarra
         if stdin_format == "raw-bgr24":
             return iter_frames_from_raw_stdin(reader, resolve_stdin_size(args))
         return iter_frames_from_encoded_stdin(reader, stdin_format)
-    raise RuntimeError("No input source specified. Use --frames-dir, --video, or pipe frames to stdin.")
+    raise RuntimeError(
+        "No input source specified. Use --frames-dir, --video, or pipe frames to stdin."
+    )
 
 
 def main() -> int:
@@ -692,7 +744,9 @@ def main() -> int:
     try:
         with args.output_csv.open("w", newline="") as handle:
             writer = csv.writer(handle)
-            writer.writerow(["frame_index", "frame_id", "x", "y", "w", "h", "confidence", "status"])
+            writer.writerow(
+                ["frame_index", "frame_id", "x", "y", "w", "h", "confidence", "status"]
+            )
 
             initialized = False
             for frame_index, frame_id, frame in frame_source(args):
@@ -702,7 +756,9 @@ def main() -> int:
                     break
 
                 if not initialized:
-                    detection = tracker.initialize(frame, template=template, init_bbox=init_bbox)
+                    detection = tracker.initialize(
+                        frame, template=template, init_bbox=init_bbox
+                    )
                     initialized = True
                 else:
                     detection = tracker.update(frame)
